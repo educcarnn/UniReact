@@ -6,10 +6,10 @@ const Header = () => {
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container className="custom-container">
-        <Navbar href="#home">
+        <Navbar.Brand>
           <span style={{ marginRight: "10px" }}>Eduardo</span>
           <span>Carneiro</span>
-        </Navbar>
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
       </Container>
     </Navbar>
