@@ -1,0 +1,15 @@
+/* Header.css */
+.custom-container {
+    border: 1px solid;
+    padding: 16px;
+    height: 10vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  
+  .custom-container .navbar-brand {
+    /* Estilos adicionais para Navbar.Brand se necessário */
+  }
+  
