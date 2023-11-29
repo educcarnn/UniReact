@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const Post = ({ showModal, handleClose }) => {
@@ -7,11 +7,24 @@ const Post = ({ showModal, handleClose }) => {
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    if (showError) {
+      const errorTimeout = setTimeout(() => {
+        setShowError(false);
+        setError("");
+      }, 3000);
+
+      return () => clearTimeout(errorTimeout);
+    }
+  }, [showError]);
 
   const handlePost = () => {
     // Realizar validações
     if (!author || !category || !content) {
       setError("Todos os campos são obrigatórios");
+      setShowError(true);
       return;
     }
 
@@ -24,7 +37,17 @@ const Post = ({ showModal, handleClose }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
+
     // Realizar validações do arquivo se necessário
+    if (selectedFile) {
+      const fileSizeInMB = selectedFile.size / (1024 * 1024);
+      if (fileSizeInMB > 2) {
+        setError("A imagem deve ter no máximo 2MB");
+        setShowError(true);
+        return;
+      }
+    }
+
     setImage(selectedFile);
   };
 
@@ -34,7 +57,7 @@ const Post = ({ showModal, handleClose }) => {
         <Modal.Title>Criar Post</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {showError && <p style={{ color: "red" }}>{error}</p>}
         <Form>
           <Form.Group controlId="author">
             <Form.Label>Autor do Post</Form.Label>
