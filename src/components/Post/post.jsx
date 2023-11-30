@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
+import { API_URL } from "../../db/api";
 
 const Post = ({ showModal, handleClose }) => {
   const [author, setAuthor] = useState("");
@@ -20,7 +21,7 @@ const Post = ({ showModal, handleClose }) => {
     }
   }, [showError]);
 
-  const handlePost = () => {
+  const handlePost = async () => {
     // Realizar validações
     if (!author || !category || !content) {
       setError("Todos os campos são obrigatórios");
@@ -28,11 +29,27 @@ const Post = ({ showModal, handleClose }) => {
       return;
     }
 
-    // Enviar os dados para a API
-    // ...
+    // Criar um objeto FormData para enviar dados do formulário, incluindo imagens
+    const formData = new FormData();
+    formData.append("author", author);
+    formData.append("category", category);
+    formData.append("content", content);
+    if (image) {
+      formData.append("image", image);
+    }
 
-    // Fechar a modal
-    handleClose();
+    try {
+      // Enviar os dados para a API usando Axios e a instância API_URL
+      const response = await API_URL.post("/api/post", formData);
+
+      // Adicionar a nova postagem ao contexto ou realizar alguma outra ação necessária
+      console.log("Postagem criada:", response.data);
+
+      // Fechar a modal
+      handleClose();
+    } catch (error) {
+      console.error("Erro ao criar postagem:", error);
+    }
   };
 
   const handleFileChange = (e) => {
