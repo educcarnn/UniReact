@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { API_URL } from "../../db/api";
+import { usePostContext } from "../../context/PostContext";
 
 const Post = ({ showModal, handleClose }) => {
   const [author, setAuthor] = useState("");
@@ -9,6 +10,7 @@ const Post = ({ showModal, handleClose }) => {
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
+  const { addPost, setPosts } = usePostContext();
 
   useEffect(() => {
     if (showError) {
@@ -22,14 +24,12 @@ const Post = ({ showModal, handleClose }) => {
   }, [showError]);
 
   const handlePost = async () => {
-    // Realizar validações
     if (!author || !category || !content) {
       setError("Todos os campos são obrigatórios");
       setShowError(true);
       return;
     }
 
-    // Criar um objeto FormData para enviar dados do formulário, incluindo imagens
     const formData = new FormData();
     formData.append("author", author);
     formData.append("category", category);
@@ -39,12 +39,9 @@ const Post = ({ showModal, handleClose }) => {
     }
 
     try {
-      // Enviar os dados para a API usando Axios e a instância API_URL
       const response = await API_URL.post("/api/post", formData);
-
-      // Adicionar a nova postagem ao contexto ou realizar alguma outra ação necessária
-      console.log("Postagem criada:", response.data);
-
+      // Adicionar a nova postagem ao contexto
+      addPost(response.data);
       // Fechar a modal
       handleClose();
     } catch (error) {
@@ -54,8 +51,6 @@ const Post = ({ showModal, handleClose }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-
-    // Realizar validações do arquivo se necessário
     if (selectedFile) {
       const fileSizeInMB = selectedFile.size / (1024 * 1024);
       if (fileSizeInMB > 2) {
@@ -64,9 +59,29 @@ const Post = ({ showModal, handleClose }) => {
         return;
       }
     }
-
     setImage(selectedFile);
   };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await API_URL.get("/api/get");
+        // Atualizar a lista de posts no contexto
+        setPosts(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar posts:", error);
+      }
+    };
+
+    // Chamar a função fetchPosts ao montar o componente
+    fetchPosts();
+
+    // Atualizar a lista de posts a cada intervalo de tempo (por exemplo, a cada 5 segundos)
+    const intervalId = setInterval(fetchPosts, 500);
+
+    // Limpar o intervalo ao desmontar o componente
+    return () => clearInterval(intervalId);
+  }, [setPosts]);
 
   return (
     <Modal show={showModal} onHide={handleClose}>
