@@ -10,7 +10,7 @@ const Header = () => {
           <span style={{ marginRight: "10px" }}>Eduardo</span>
           <span>Carneiro</span>
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+
       </Container>
     </Navbar>
   );

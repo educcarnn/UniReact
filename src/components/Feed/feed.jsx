@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Dropdown } from "react-bootstrap";
+import { Card, Button, Dropdown, Badge } from "react-bootstrap";
 import { API_URL } from "../../db/api";
 import { usePostContext } from "../../context/PostContext";
 import avatar from "../../assets/avatar.png";
 import "./feed.css";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFileAlt,
+  faUsers,
+  faNewspaper,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState([]);
@@ -88,6 +94,20 @@ const Feed = () => {
                   {post.created_at && (
                     <span>Publicado em {formatarData(post.created_at)}</span>
                   )}
+                  {post.category && (
+                    <Badge variant="primary">
+                      {post.category === "Post" && (
+                        <FontAwesomeIcon icon={faUsers} />
+                      )}
+                      {post.category === "Artigo" && (
+                        <FontAwesomeIcon icon={faFileAlt} />
+                      )}
+                      {post.category === "Grupo" && (
+                        <FontAwesomeIcon icon={faNewspaper} />
+                      )}
+                      {post.category}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </Card.Header>
@@ -111,9 +131,8 @@ const Feed = () => {
           <Card.Body className="body">
             <img
               src={`http://localhost:8000/storage/${post?.image}`}
-              alt=""
-              height={300}
-              width={500}
+              alt={post?.category}
+              style={{ width: "20%", height: "20%" }}
             />
             <Card.Text>
               {expandedPosts?.includes(post.id)
