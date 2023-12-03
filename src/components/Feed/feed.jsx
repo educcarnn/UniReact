@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Dropdown, Badge } from "react-bootstrap";
+import { Card, Button, Dropdown, Badge, Modal, Form } from "react-bootstrap";
 import { API_URL } from "../../db/api";
 import { usePostContext } from "../../context/PostContext";
 import avatar from "../../assets/avatar.png";
@@ -7,14 +7,12 @@ import "./feed.css";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faFileAlt,
-  faUsers,
-  faNewspaper,
-} from "@fortawesome/free-solid-svg-icons";
+import { faFileAlt, faUsers, faNewspaper } from "@fortawesome/free-solid-svg-icons";
 
 const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedPost, setEditedPost] = useState(null);
   const { posts, deletePost, editPost, setPosts } = usePostContext();
   const [reloadFeed, setReloadFeed] = useState(false);
 
@@ -54,21 +52,38 @@ const Feed = () => {
     }
   };
 
-  const handleEditPost = async (postId, content) => {
-    const editedContent = prompt("Edite o conteúdo do post:", content);
-    if (editedContent !== null) {
-      try {
-        await API_URL.patch(`/api/${postId}`, { content: editedContent });
-        editPost(postId, {
-          ...posts.find((post) => post.id === postId),
-          content: editedContent,
-        });
-        setReloadFeed((prev) => !prev); // Força uma recarga do feed
-      } catch (error) {
-        console.error("Erro ao editar post:", error);
-      }
+  const handleEditPost = (post) => {
+    setEditedPost(post);
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditedPost(null);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      // Faça a chamada para editar o post no backend
+      await API_URL.patch(`/api/${editedPost.id}`, {
+        author: editedPost.author,
+        category: editedPost.category,
+        content: editedPost.content,
+      });
+
+      // Atualize o contexto com a postagem editada
+      editPost(editedPost.id, editedPost);
+
+      // Feche o modal de edição
+      setShowEditModal(false);
+
+      // Força uma recarga do feed
+      setReloadFeed((prev) => !prev);
+    } catch (error) {
+      console.error("Erro ao editar post:", error);
     }
   };
+
   const formatarData = (data) => {
     try {
       // Tenta fazer o parse da data
@@ -116,9 +131,7 @@ const Feed = () => {
                 Opções
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item
-                  onClick={() => handleEditPost(post.id, post.content)}
-                >
+                <Dropdown.Item onClick={() => handleEditPost(post)}>
                   Editar
                 </Dropdown.Item>
                 <Dropdown.Item onClick={() => handleDeletePost(post.id)}>
@@ -153,6 +166,69 @@ const Feed = () => {
           </Card.Body>
         </Card>
       ))}
+
+      {/* Modal de Edição */}
+      <Modal show={showEditModal} onHide={handleCloseEditModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Post</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="editTitle">
+              <Form.Label>Título</Form.Label>
+              <Form.Control
+                type="text"
+                value={editedPost?.author}
+                onChange={(e) =>
+                  setEditedPost((prev) => ({
+                    ...prev,
+                    author: e.target.value,
+                  }))
+                }
+              />
+            </Form.Group>
+            <Form.Group controlId="editCategory">
+              <Form.Label>Categoria</Form.Label>
+              <Form.Control
+                as="select"
+                value={editedPost?.category}
+                onChange={(e) =>
+                  setEditedPost((prev) => ({
+                    ...prev,
+                    category: e.target.value,
+                  }))
+                }
+              >
+                <option value="Post">Post</option>
+                <option value="Artigo">Artigo</option>
+                <option value="Grupo">Grupo</option>
+              </Form.Control>
+            </Form.Group>
+            <Form.Group controlId="editContent">
+              <Form.Label>Conteúdo</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editedPost?.content}
+                onChange={(e) =>
+                  setEditedPost((prev) => ({
+                    ...prev,
+                    content: e.target.value,
+                  }))
+                }
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseEditModal}>
+            Fechar
+          </Button>
+          <Button variant="primary" onClick={handleSaveEdit}>
+            Salvar Edições
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
