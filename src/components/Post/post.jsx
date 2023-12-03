@@ -32,31 +32,29 @@ const Post = ({ showModal, handleClose }) => {
       setShowError(true);
       return;
     }
-  
+
     const contentState = editorState.getCurrentContent();
     const rawContentState = convertToRaw(contentState);
-  
+
     // Extrair apenas o texto do conteúdo
     const textContent = rawContentState.blocks
       .map((block) => block.text)
       .join("\n");
-  
-    const formData = new FormData();
-    formData.append("author", author);
-    formData.append("category", category);
-    formData.append("content", textContent);
-  
-    // Verificar se há uma imagem antes de anexar ao FormData
-    if (image) {
-      formData.append("images", image);
-    }
-  
-    // Adicionando console.log para verificar os dados antes de enviar
-    console.log("Dados do formulário:", formData);
-  
+
+      const formData = new FormData();
+      formData.append("author", author);
+      formData.append("category", category);
+      formData.append("content", textContent);
+      formData.append("image", image);
+
     try {
       // Enviar dados formatados para o backend
-      const response = await API_URL.post("/api/post", formData);
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+      const response = await API_URL.post("/api/post", formData, config);
       // Adicionar a nova postagem ao contexto
       addPost(response.data);
       // Fechar a modal
@@ -123,9 +121,7 @@ const Post = ({ showModal, handleClose }) => {
               toolbar={{
                 options: [
                   "inline",
-                  "blockType",
-                  "fontSize",
-                  "fontFamily",
+
                   "list",
                   "textAlign",
                   "colorPicker",
@@ -157,6 +153,7 @@ const Post = ({ showModal, handleClose }) => {
 const ImageUploader = ({ setImage }) => {
   const onImageUpload = (e) => {
     const selectedFile = e.target.files[0];
+    console.log(selectedFile)
     setImage(selectedFile);
   };
 
@@ -164,9 +161,7 @@ const ImageUploader = ({ setImage }) => {
     <div>
       <label>
         <input type="file" accept="image/*" onChange={onImageUpload} />
-        <span style={{ cursor: "pointer", marginRight: "10px" }}>
-          Inserir Imagem
-        </span>
+      
       </label>
     </div>
   );

@@ -4,6 +4,8 @@ import { API_URL } from "../../db/api";
 import { usePostContext } from "../../context/PostContext";
 import avatar from "../../assets/avatar.png";
 import "./feed.css";
+import { format, parseISO } from "date-fns";
+import { pt } from "date-fns/locale";
 
 const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState([]);
@@ -61,22 +63,34 @@ const Feed = () => {
       }
     }
   };
+  const formatarData = (data) => {
+    try {
+      // Tenta fazer o parse da data
+      const dataParseada = parseISO(data);
+      // Formata a data
+      return format(dataParseada, "dd 'de' MMMM 'às' HH:mm", { locale: pt });
+    } catch (error) {
+      // Se houver um erro ao fazer o parse, retorna a data original
+      return data;
+    }
+  };
 
   return (
     <div className="block">
       {posts?.map((post) => (
         <Card key={post?.id} className="mb-3" style={{ width: "70%" }}>
-          <Card.Header className="card-header">
-            <div className="">
-              <img src={avatar} alt="Avatar" className="avatar" />
-              <div className="card-avatar">
-                <span>{post.author} </span>
-                <span>Publicado em 12 de setembro às 14:30 </span>
-                  {console.log(post.image)}
-                <img src={`http://localhost:8000/storage/${post?.image}`} alt="" height={500} width={500} />
+          <div className="itens">
+            <Card.Header className="card-header">
+              <div className="item-header">
+                <img src={avatar} alt="Avatar" className="avatar" />
+                <div className="card-avatar">
+                  <span>{post.author} </span>
+                  {post.created_at && (
+                    <span>Publicado em {formatarData(post.created_at)}</span>
+                  )}
+                </div>
               </div>
-            </div>
-
+            </Card.Header>
             <Dropdown>
               <Dropdown.Toggle variant="success" id="dropdown-basic">
                 Opções
@@ -92,8 +106,15 @@ const Feed = () => {
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
-          </Card.Header>
-          <Card.Body>
+          </div>
+
+          <Card.Body className="body">
+            <img
+              src={`http://localhost:8000/storage/${post?.image}`}
+              alt=""
+              height={300}
+              width={500}
+            />
             <Card.Text>
               {expandedPosts?.includes(post.id)
                 ? post?.content
@@ -111,21 +132,6 @@ const Feed = () => {
                 </Button>
               )}
           </Card.Body>
-          {/*
-             {post?.image?.length > 0 && !expandedPosts.includes(post.id) && (
-            <div>
-              {post.images.map((image, index) => (
-                <img
-                  key={index}
-                  src={`${API_URL.defaults.baseURL}/images/${image}`}
-                  alt={`Imagem ${index}`}
-                  style={{ maxWidth: "100%", marginBottom: "10px" }}
-                />
-              ))}
-            </div>
-          )}
-          */}
-        
         </Card>
       ))}
     </div>
