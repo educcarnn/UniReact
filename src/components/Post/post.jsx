@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
+import { EditorState, convertToRaw } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { API_URL } from "../../db/api";
 import { usePostContext } from "../../context/PostContext";
 
 const Post = ({ showModal, handleClose }) => {
   const [author, setAuthor] = useState("");
   const [category, setCategory] = useState("");
-  const [content, setContent] = useState("");
+  const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
@@ -24,21 +27,35 @@ const Post = ({ showModal, handleClose }) => {
   }, [showError]);
 
   const handlePost = async () => {
-    if (!author || !category || !content) {
+    if (!author || !category || !editorState.getCurrentContent().hasText()) {
       setError("Todos os campos são obrigatórios");
       setShowError(true);
       return;
     }
-
+  
+    const contentState = editorState.getCurrentContent();
+    const rawContentState = convertToRaw(contentState);
+  
+    // Extrair apenas o texto do conteúdo
+    const textContent = rawContentState.blocks
+      .map((block) => block.text)
+      .join("\n");
+  
     const formData = new FormData();
     formData.append("author", author);
     formData.append("category", category);
-    formData.append("content", content);
+    formData.append("content", textContent);
+  
+    // Verificar se há uma imagem antes de anexar ao FormData
     if (image) {
-      formData.append("image", image);
+      formData.append("images", image);
     }
-
+  
+    // Adicionando console.log para verificar os dados antes de enviar
+    console.log("Dados do formulário:", formData);
+  
     try {
+      // Enviar dados formatados para o backend
       const response = await API_URL.post("/api/post", formData);
       // Adicionar a nova postagem ao contexto
       addPost(response.data);
@@ -47,19 +64,6 @@ const Post = ({ showModal, handleClose }) => {
     } catch (error) {
       console.error("Erro ao criar postagem:", error);
     }
-  };
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      const fileSizeInMB = selectedFile.size / (1024 * 1024);
-      if (fileSizeInMB > 2) {
-        setError("A imagem deve ter no máximo 2MB");
-        setShowError(true);
-        return;
-      }
-    }
-    setImage(selectedFile);
   };
 
   useEffect(() => {
@@ -77,7 +81,7 @@ const Post = ({ showModal, handleClose }) => {
     fetchPosts();
 
     // Atualizar a lista de posts a cada intervalo de tempo (por exemplo, a cada 5 segundos)
-    const intervalId = setInterval(fetchPosts, 500);
+    const intervalId = setInterval(fetchPosts, 5000);
 
     // Limpar o intervalo ao desmontar o componente
     return () => clearInterval(intervalId);
@@ -113,16 +117,28 @@ const Post = ({ showModal, handleClose }) => {
           </Form.Group>
           <Form.Group controlId="content">
             <Form.Label>Escrever Publicação</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={5}
-              placeholder="Digite sua publicação aqui..."
-              onChange={(e) => setContent(e.target.value)}
+            <Editor
+              editorState={editorState}
+              onEditorStateChange={setEditorState}
+              toolbar={{
+                options: [
+                  "inline",
+                  "blockType",
+                  "fontSize",
+                  "fontFamily",
+                  "list",
+                  "textAlign",
+                  "colorPicker",
+                  "link",
+                  "embedded",
+                  "image",
+                  "remove",
+                  "history",
+                ],
+                inline: { options: ["bold", "italic", "underline"] },
+              }}
+              toolbarCustomButtons={[<ImageUploader setImage={setImage} />]}
             />
-          </Form.Group>
-          <Form.Group controlId="image">
-            <Form.Label>Inserir Imagem</Form.Label>
-            <Form.Control type="file" accept=".jpg, .png" onChange={handleFileChange} />
           </Form.Group>
         </Form>
       </Modal.Body>
@@ -135,6 +151,24 @@ const Post = ({ showModal, handleClose }) => {
         </Button>
       </Modal.Footer>
     </Modal>
+  );
+};
+
+const ImageUploader = ({ setImage }) => {
+  const onImageUpload = (e) => {
+    const selectedFile = e.target.files[0];
+    setImage(selectedFile);
+  };
+
+  return (
+    <div>
+      <label>
+        <input type="file" accept="image/*" onChange={onImageUpload} />
+        <span style={{ cursor: "pointer", marginRight: "10px" }}>
+          Inserir Imagem
+        </span>
+      </label>
+    </div>
   );
 };
 

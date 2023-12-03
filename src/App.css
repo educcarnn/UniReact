@@ -44,7 +44,7 @@ ol, ul {
     list-style: none;
 }
 
-box-sizing: border-box;
+
 
 blockquote, q {
     quotes: none;
@@ -73,8 +73,3 @@ button {
     border: none;
 }
 
-img {
-    width: 150px;
-    width: 150px;
-    margin: 0 auto;
-}
