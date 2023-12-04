@@ -7,8 +7,8 @@ const Header = () => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container className="custom-container">
         <Navbar.Brand>
-          <span style={{ marginRight: "10px" }}>Eduardo</span>
-          <span>Carneiro</span>
+          <span style={{ marginRight: "10px" }}>Uni</span>
+          <span>Social</span>
         </Navbar.Brand>
 
       </Container>
