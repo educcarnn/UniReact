@@ -121,7 +121,6 @@ const Post = ({ showModal, handleClose }) => {
               toolbar={{
                 options: [
                   "inline",
-
                   "list",
                   "textAlign",
                   "colorPicker",

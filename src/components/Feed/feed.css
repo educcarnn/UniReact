@@ -9,9 +9,7 @@
   align-items: center;
 }
 
-.card{
-  
-}
+
 
 
 .body{
@@ -30,6 +28,13 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+}
+
+@media(max-width: 800px){
+  .itens{
+    display: flex;
+    flex-direction: column;
+  }
 }
 .card-header {
   display: flex;

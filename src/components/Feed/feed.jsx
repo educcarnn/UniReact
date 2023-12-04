@@ -7,7 +7,12 @@ import "./feed.css";
 import { format, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileAlt, faUsers, faNewspaper } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFileAlt,
+  faUsers,
+  faNewspaper,
+} from "@fortawesome/free-solid-svg-icons";
+import DeletePostModal from "../Modals/deletePost";
 
 const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState([]);
@@ -15,6 +20,8 @@ const Feed = () => {
   const [editedPost, setEditedPost] = useState(null);
   const { posts, deletePost, editPost, setPosts } = usePostContext();
   const [reloadFeed, setReloadFeed] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [postIdToDelete, setPostIdToDelete] = useState(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -39,18 +46,31 @@ const Feed = () => {
     setExpandedPosts((prevExpanded) => [...prevExpanded, postId]);
   };
 
-  const handleDeletePost = async (postId) => {
-    const confirmDelete = window.confirm("Deseja realmente deletar este post?");
-    if (confirmDelete) {
-      try {
-        await API_URL.delete(`/api/${postId}`);
-        deletePost(postId);
+  const handleDeletePost = (postId) => {
+    setPostIdToDelete(postId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      if (postIdToDelete) {
+        await API_URL.delete(`/api/${postIdToDelete}`);
+        deletePost(postIdToDelete);
         setReloadFeed((prev) => !prev); // Força uma recarga do feed
-      } catch (error) {
-        console.error("Erro ao deletar post:", error);
       }
+    } catch (error) {
+      console.error('Erro ao deletar post:', error);
+    } finally {
+      setShowDeleteModal(false);
+      setPostIdToDelete(null);
     }
   };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setPostIdToDelete(null);
+  };
+
 
   const handleEditPost = (post) => {
     setEditedPost(post);
@@ -167,7 +187,6 @@ const Feed = () => {
         </Card>
       ))}
 
-      {/* Modal de Edição */}
       <Modal show={showEditModal} onHide={handleCloseEditModal}>
         <Modal.Header closeButton>
           <Modal.Title>Editar Post</Modal.Title>
@@ -229,6 +248,11 @@ const Feed = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      <DeletePostModal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };
