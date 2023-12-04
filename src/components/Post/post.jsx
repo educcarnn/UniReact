@@ -41,11 +41,11 @@ const Post = ({ showModal, handleClose }) => {
       .map((block) => block.text)
       .join("\n");
 
-      const formData = new FormData();
-      formData.append("author", author);
-      formData.append("category", category);
-      formData.append("content", textContent);
-      formData.append("image", image);
+    const formData = new FormData();
+    formData.append("author", author);
+    formData.append("category", category);
+    formData.append("content", textContent);
+    formData.append("image", image);
 
     try {
       // Enviar dados formatados para o backend
@@ -123,10 +123,8 @@ const Post = ({ showModal, handleClose }) => {
                   "inline",
                   "list",
                   "textAlign",
-                  "colorPicker",
                   "link",
                   "embedded",
-                  "image",
                   "remove",
                   "history",
                 ],
@@ -152,7 +150,7 @@ const Post = ({ showModal, handleClose }) => {
 const ImageUploader = ({ setImage }) => {
   const onImageUpload = (e) => {
     const selectedFile = e.target.files[0];
-    console.log(selectedFile)
+    console.log(selectedFile);
     setImage(selectedFile);
   };
 
@@ -160,7 +158,6 @@ const ImageUploader = ({ setImage }) => {
     <div>
       <label>
         <input type="file" accept="image/*" onChange={onImageUpload} />
-      
       </label>
     </div>
   );

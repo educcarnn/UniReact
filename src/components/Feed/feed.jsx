@@ -4,15 +4,15 @@ import { API_URL } from "../../db/api";
 import { usePostContext } from "../../context/PostContext";
 import avatar from "../../assets/avatar.png";
 import "./feed.css";
-import { format, parseISO } from "date-fns";
-import { pt } from "date-fns/locale";
+import { formatarData } from "../../utils/data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileAlt,
   faUsers,
   faNewspaper,
 } from "@fortawesome/free-solid-svg-icons";
-import DeletePostModal from "../Modals/deletePost";
+import DeletePostModal from "./DeletePost/deletePost";
+import EditPostForm from "./EditPost/editPost";
 
 const Feed = () => {
   const [expandedPosts, setExpandedPosts] = useState([]);
@@ -59,7 +59,7 @@ const Feed = () => {
         setReloadFeed((prev) => !prev); // Força uma recarga do feed
       }
     } catch (error) {
-      console.error('Erro ao deletar post:', error);
+      console.error("Erro ao deletar post:", error);
     } finally {
       setShowDeleteModal(false);
       setPostIdToDelete(null);
@@ -71,7 +71,6 @@ const Feed = () => {
     setPostIdToDelete(null);
   };
 
-
   const handleEditPost = (post) => {
     setEditedPost(post);
     setShowEditModal(true);
@@ -82,7 +81,7 @@ const Feed = () => {
     setEditedPost(null);
   };
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = async (editedPost) => {
     try {
       // Faça a chamada para editar o post no backend
       await API_URL.patch(`/api/${editedPost.id}`, {
@@ -90,29 +89,17 @@ const Feed = () => {
         category: editedPost.category,
         content: editedPost.content,
       });
-
+  
       // Atualize o contexto com a postagem editada
       editPost(editedPost.id, editedPost);
-
+  
       // Feche o modal de edição
       setShowEditModal(false);
-
+  
       // Força uma recarga do feed
       setReloadFeed((prev) => !prev);
     } catch (error) {
       console.error("Erro ao editar post:", error);
-    }
-  };
-
-  const formatarData = (data) => {
-    try {
-      // Tenta fazer o parse da data
-      const dataParseada = parseISO(data);
-      // Formata a data
-      return format(dataParseada, "dd 'de' MMMM 'às' HH:mm", { locale: pt });
-    } catch (error) {
-      // Se houver um erro ao fazer o parse, retorna a data original
-      return data;
     }
   };
 
@@ -186,68 +173,16 @@ const Feed = () => {
           </Card.Body>
         </Card>
       ))}
+      
+      {editedPost && (
+       <EditPostForm
+       show={showEditModal}
+       onHide={handleCloseEditModal}
+       onSave={handleSaveEdit}
+       post={editedPost}
+     />
+      )}
 
-      <Modal show={showEditModal} onHide={handleCloseEditModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Editar Post</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="editTitle">
-              <Form.Label>Título</Form.Label>
-              <Form.Control
-                type="text"
-                value={editedPost?.author}
-                onChange={(e) =>
-                  setEditedPost((prev) => ({
-                    ...prev,
-                    author: e.target.value,
-                  }))
-                }
-              />
-            </Form.Group>
-            <Form.Group controlId="editCategory">
-              <Form.Label>Categoria</Form.Label>
-              <Form.Control
-                as="select"
-                value={editedPost?.category}
-                onChange={(e) =>
-                  setEditedPost((prev) => ({
-                    ...prev,
-                    category: e.target.value,
-                  }))
-                }
-              >
-                <option value="Post">Post</option>
-                <option value="Artigo">Artigo</option>
-                <option value="Grupo">Grupo</option>
-              </Form.Control>
-            </Form.Group>
-            <Form.Group controlId="editContent">
-              <Form.Label>Conteúdo</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={editedPost?.content}
-                onChange={(e) =>
-                  setEditedPost((prev) => ({
-                    ...prev,
-                    content: e.target.value,
-                  }))
-                }
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseEditModal}>
-            Fechar
-          </Button>
-          <Button variant="primary" onClick={handleSaveEdit}>
-            Salvar Edições
-          </Button>
-        </Modal.Footer>
-      </Modal>
       <DeletePostModal
         show={showDeleteModal}
         onHide={handleCancelDelete}
